@@ -542,7 +542,8 @@ func (p *PodStore) addPodOwnersAndPodName(metric telegraf.Metric, pod *corev1.Po
 		if owner.Kind != "" && owner.Name != "" {
 			kind := owner.Kind
 			name := owner.Name
-			if owner.Kind == ReplicaSet {
+			if owner.Kind == ReplicaSet && k8sclient.Get().ReplicaSet != nil {
+				// CloudZero - avoid high memory usage when cluster has many replicaSets. e.g. > 71,000
 				rsToDeployment := k8sclient.Get().ReplicaSet.ReplicaSetToDeployment()
 				if parent := rsToDeployment[owner.Name]; parent != "" {
 					kind = Deployment
@@ -563,6 +564,8 @@ func (p *PodStore) addPodOwnersAndPodName(metric telegraf.Metric, pod *corev1.Po
 			owners = append(owners, Owner{OwnerKind: kind, OwnerName: name})
 
 			if podName == "" {
+				// CloudZero - Set PodName to be the name of the owner. CloudZero will merge cost of
+				// all the pods together created by this "workload." e.g. All pods belonging to replicaset=coredns-64497985bdre grouped together
 				if owner.Kind == StatefulSet {
 					podName = pod.Name
 				} else if owner.Kind == DaemonSet || owner.Kind == Job || owner.Kind == ReplicaSet || owner.Kind == ReplicationController {
