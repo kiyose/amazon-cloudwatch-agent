@@ -29,12 +29,6 @@ import (
 // The amount of time for which to keep stats in memory.
 const statsCacheDuration = 2 * time.Minute
 
-// Max collection interval, it is not meaningful if allowDynamicHousekeeping = false
-const maxHousekeepingInterval = 15 * time.Second
-
-// When allowDynamicHousekeeping is true, the collection interval is floating between 1s(default) to maxHousekeepingInterval
-const allowDynamicHousekeeping = true
-
 const defaultHousekeepingInterval = 10 * time.Second
 
 type Cadvisor struct {
@@ -89,6 +83,7 @@ func (c *Cadvisor) Gather(acc telegraf.Accumulator) error {
 	}
 
 	req := &cinfo.ContainerInfoRequest{
+		//TODO DRS Check this value. Should it be '-1' ?
 		NumStats: 1,
 	}
 	infos, err = c.manager.SubcontainersInfo("/", req)
@@ -119,8 +114,27 @@ func (c *Cadvisor) initManager() error {
 		cgroupRoots = []string{"/kubepods"}
 	}
 
+	//
 	// Create and start the cAdvisor container manager.
-	m, err := manager.New(memory.New(statsCacheDuration, nil), sysFs, maxHousekeepingInterval, allowDynamicHousekeeping, includedMetrics, http.DefaultClient, cgroupRoots)
+	//
+	// New takes a memory storage and returns a new manager.
+	memoryCache := memory.New(statsCacheDuration, nil)
+	// Max collection interval, it is not meaningful if allowDynamicHousekeeping = false
+	maxHousekeepingInterval := 15 * time.Second
+	// When allowDynamicHousekeeping is true, the collection interval is floating between 1s(default) to maxHousekeepingInterval
+	allowDynamicHousekeeping := true
+	houseKeepingConfig := manager.HouskeepingConfig{Interval: &maxHousekeepingInterval, AllowDynamic: &allowDynamicHousekeeping}
+	includedMetricsSet := includedMetrics
+	collectorHTTPClient := http.DefaultClient
+	rawContainerCgroupPathPrefixWhiteList := []string{} // What is the correct value for this?
+	containerEnvMetadataWhiteList := cgroupRoots        // Is this the correct value?
+	perfEventsFile := "perfEventsFile.config"           // What is the correct value for this?
+	resctrlInterval := 15 * time.Second                 // What is the correct value for this?
+
+	m, err := manager.New(memoryCache, sysFs, houseKeepingConfig, includedMetricsSet, collectorHTTPClient, rawContainerCgroupPathPrefixWhiteList, containerEnvMetadataWhiteList, perfEventsFile, resctrlInterval)
+	// previous create with cgroups v1 (v0.36.0)
+	// m, err := manager.New(memory.New(statsCacheDuration, nil), sysFs, maxHousekeepingInterval, allowDynamicHousekeeping, includedMetrics, http.DefaultClient, cgroupRoots)
+
 	if err != nil {
 		log.Println("E! manager allocate failed, ", err)
 		return err
