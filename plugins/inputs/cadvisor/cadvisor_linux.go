@@ -18,7 +18,6 @@ import (
 	"github.com/google/cadvisor/container/containerd"
 	"github.com/google/cadvisor/container/crio"
 	"github.com/google/cadvisor/container/docker"
-	"github.com/google/cadvisor/container/mesos"
 	"github.com/google/cadvisor/container/systemd"
 	cinfo "github.com/google/cadvisor/info/v1"
 	"github.com/google/cadvisor/manager"
@@ -129,7 +128,6 @@ func (c *Cadvisor) initManager() error {
 	cadvisormetrics.RegisterPlugin("containerd", containerd.NewPlugin())
 	cadvisormetrics.RegisterPlugin("crio", crio.NewPlugin())
 	cadvisormetrics.RegisterPlugin("docker", docker.NewPlugin())
-	cadvisormetrics.RegisterPlugin("mesos", mesos.NewPlugin())
 	cadvisormetrics.RegisterPlugin("systemd", systemd.NewPlugin())
 	c.manager = m
 	err = c.manager.Start()
