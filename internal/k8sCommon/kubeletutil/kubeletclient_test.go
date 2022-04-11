@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/docker/docker/pkg/testutil/assert"
+	"gotest.tools/v3/assert"
 	"github.com/stretchr/testify/mock"
 )
 

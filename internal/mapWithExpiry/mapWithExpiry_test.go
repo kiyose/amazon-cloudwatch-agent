@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/docker/docker/pkg/testutil/assert"
+	"gotest.tools/v3/assert"
 )
 
 func TestMapWithExpiry_add(t *testing.T) {

@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/docker/docker/pkg/testutil/assert"
+	"gotest.tools/v3/assert"
 )
 
 func TestUtils_parseDeploymentFromReplicaSet(t *testing.T) {
