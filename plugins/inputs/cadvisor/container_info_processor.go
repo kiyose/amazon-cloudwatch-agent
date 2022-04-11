@@ -6,6 +6,7 @@ package cadvisor
 import (
 	"log"
 	"path"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -160,6 +161,14 @@ func processContainer(info *cinfo.ContainerInfo, detailMode bool, containerOrche
 	return result, pKey
 }
 
+func stripDockerScopeFromContainerInfoName(name string) string {
+	// Hack to remove trailing extraneous information from InfoName and allow lookup by pod info.
+	// Keys look like:
+	//   /kubepods.slice/kubepods-burstable.slice/kubepods-burstable-pod1867bd7f_a98c_4a37_899f_857df482c984.slice/docker-d704a4d084df050c1f5f4f0763f55e8f75d85bf37525844b9234afcd86a1b252.scope
+	// everything following the /docker needs to be removed.
+	return regexp.MustCompile(`/docker-.+$`).ReplaceAllString(name, "")
+}
+
 // processPod is almost identical as processContainer. We got this second loop because pod detection relies
 // on inspecting labels from containers in processContainer. cgroup path for detected pods are saved in podKeys.
 // We may not get container before pod when looping all returned cgroup paths so we use a two pass solution
@@ -172,6 +181,11 @@ func processPod(info *cinfo.ContainerInfo, podKeys map[string]podKey) []*extract
 	}
 
 	podKey, ok := podKeys[info.Name]
+	if !ok {
+		// Try again after removing trailing /docker...scope$
+		podKey, ok = podKeys[stripDockerScopeFromContainerInfoName(info.Name)]
+	}
+
 	if !ok {
 		return result
 	}

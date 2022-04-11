@@ -18,7 +18,6 @@ import (
 	"github.com/google/cadvisor/container/containerd"
 	"github.com/google/cadvisor/container/crio"
 	"github.com/google/cadvisor/container/docker"
-	"github.com/google/cadvisor/container/mesos"
 	"github.com/google/cadvisor/container/systemd"
 	cinfo "github.com/google/cadvisor/info/v1"
 	"github.com/google/cadvisor/manager"
@@ -29,12 +28,6 @@ import (
 
 // The amount of time for which to keep stats in memory.
 const statsCacheDuration = 2 * time.Minute
-
-// Max collection interval, it is not meaningful if allowDynamicHousekeeping = false
-const maxHousekeepingInterval = 15 * time.Second
-
-// When allowDynamicHousekeeping is true, the collection interval is floating between 1s(default) to maxHousekeepingInterval
-const allowDynamicHousekeeping = true
 
 const defaultHousekeepingInterval = 10 * time.Second
 
@@ -120,8 +113,31 @@ func (c *Cadvisor) initManager() error {
 		cgroupRoots = []string{"/kubepods"}
 	}
 
+	//
 	// Create and start the cAdvisor container manager.
-	m, err := manager.New(memory.New(statsCacheDuration, nil), sysFs, maxHousekeepingInterval, allowDynamicHousekeeping, includedMetrics, http.DefaultClient, cgroupRoots)
+	//
+	// Max collection interval, it is not meaningful if allowDynamicHousekeeping = false
+	maxHousekeepingInterval := 15 * time.Second
+	// When allowDynamicHousekeeping is true, the collection interval is floating between 1s(default) to maxHousekeepingInterval
+	allowDynamicHousekeeping := true
+	houseKeepingConfig := manager.HouskeepingConfig{
+		Interval:     &maxHousekeepingInterval,
+		AllowDynamic: &allowDynamicHousekeeping}
+
+	// updated from manager.New in cgroups v1 (v0.36.0)
+	// m, err := manager.New(memory.New(statsCacheDuration, nil), sysFs, maxHousekeepingInterval, allowDynamicHousekeeping, includedMetrics, http.DefaultClient, cgroupRoots)
+	m, err := manager.New(
+		memory.New(statsCacheDuration, nil),
+		sysFs,
+		houseKeepingConfig, //	{ maxHousekeepingInterval, allowDynamicHousekeeping }
+		includedMetrics,
+		http.DefaultClient,
+		cgroupRoots, // rawContainerCgroupPathPrefixWhiteList
+		[]string{},  // containerEnvMetadataWhiteList - List of container env prefix whitelist, the matched container envs would be collected into metrics as extra labels. https://github.com/google/cadvisor/blob/v0.44.0/manager/manager.go#L269-L270
+		"",          // perfEventsFile: Leaving this value empty turns off perfEventsManager https://github.com/google/cadvisor/blob/v0.44.0/perf/manager_libpfm.go#L38-L40
+		0,           // resctrlInterval, Resctrl mon groups updating interval. Zero value disables updating mon groups. https://github.com/google/cadvisor/pull/2793/files#diff-cec39746c40e86227962aa52ed9ac22cf95c1504cef42cb16c0dd5c16a8cf6caR76
+	)
+
 	if err != nil {
 		log.Println("E! manager allocate failed, ", err)
 		return err
@@ -129,7 +145,6 @@ func (c *Cadvisor) initManager() error {
 	cadvisormetrics.RegisterPlugin("containerd", containerd.NewPlugin())
 	cadvisormetrics.RegisterPlugin("crio", crio.NewPlugin())
 	cadvisormetrics.RegisterPlugin("docker", docker.NewPlugin())
-	cadvisormetrics.RegisterPlugin("mesos", mesos.NewPlugin())
 	cadvisormetrics.RegisterPlugin("systemd", systemd.NewPlugin())
 	c.manager = m
 	err = c.manager.Start()
