@@ -6,6 +6,9 @@ replace github.com/influxdata/telegraf => github.com/aws/telegraf v0.10.2-0.2020
 
 replace github.com/shirou/gopsutil => github.com/aws/telegraf/patches/gopsutil v0.0.0-20201015165757-4470de2d306b // Temporary fix, pending PR https://github.com/shirou/gopsutil/pull/957
 
+//replace github.com/docker/docker => github.com/docker/docker v1.13.1
+replace github.com/docker/docker => github.com/docker/docker v20.10.12+incompatible
+
 //pin consul to a newer version to fix the ambiguous import issue
 //see https://github.com/hashicorp/consul/issues/6019 and https://github.com/hashicorp/consul/issues/6414
 //Consul is used only by an plugin in telegraf and the version changes from v1.2.1 to v1.8.4 here (no major version change)
@@ -41,16 +44,15 @@ replace golang.zx2c4.com/wireguard v0.0.20200121 => golang.zx2c4.com/wireguard v
 require (
 	github.com/BurntSushi/toml v0.3.1
 	github.com/Jeffail/gabs v1.4.0
-	github.com/aws/aws-sdk-go v1.30.15
+	github.com/aws/aws-sdk-go v1.35.24
 	github.com/aws/aws-sdk-go-v2 v1.13.0
 	github.com/aws/aws-sdk-go-v2/config v1.13.1
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.29.0
 	github.com/aws/smithy-go v1.10.0
 	github.com/bigkevmcd/go-configparser v0.0.0-20200217161103-d137835d2579
-	github.com/docker/docker v1.13.1
 	github.com/go-kit/kit v0.10.0
 	github.com/gobwas/glob v0.2.3
-	github.com/google/cadvisor v0.36.0
+	github.com/google/cadvisor v0.44.0
 	github.com/google/go-cmp v0.5.6
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/imdario/mergo v0.3.8 // indirect
@@ -58,23 +60,24 @@ require (
 	github.com/influxdata/toml v0.0.0-20190415235208-270119a8ce65
 	github.com/influxdata/wlog v0.0.0-20160411224016-7c63b0a71ef8
 	github.com/kardianos/service v1.0.0
-	github.com/kr/pretty v0.2.0
+	github.com/kr/pretty v0.2.1
 	github.com/oklog/run v1.1.0
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus/client_golang v1.5.1
-	github.com/prometheus/common v0.9.1
+	github.com/prometheus/client_golang v1.7.1
+	github.com/prometheus/common v0.10.0
 	github.com/prometheus/prometheus v1.8.2-0.20200420081721-18254838fbe2
 	github.com/shirou/gopsutil v2.20.5+incompatible
-	github.com/stretchr/testify v1.5.1
+	github.com/stretchr/testify v1.7.0
 	github.com/xeipuuv/gojsonschema v1.2.0
-	golang.org/x/net v0.0.0-20200301022130-244492dfa37a
-	golang.org/x/sync v0.0.0-20200317015054-43a5402ce75a
-	golang.org/x/sys v0.0.0-20200316230553-a7d97aace0b0
+	golang.org/x/net v0.0.0-20210226172049-e18ecbb05110
+	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9
+	golang.org/x/sys v0.0.0-20211116061358-0a5406a5449c
 	golang.org/x/text v0.3.3
 	gopkg.in/fsnotify.v1 v1.4.7
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7
 	gopkg.in/yaml.v2 v2.2.8
+	gotest.tools/v3 v3.0.2
 	k8s.io/api v0.17.4
 	k8s.io/apimachinery v0.17.4
 	k8s.io/client-go v0.17.4
