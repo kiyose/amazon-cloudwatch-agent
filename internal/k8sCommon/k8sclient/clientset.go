@@ -67,7 +67,8 @@ func (c *K8sClient) init() {
 	c.Ep = new(epClient)
 	c.Pod = new(podClient)
 	c.Node = new(nodeClient)
-	c.ReplicaSet = new(replicaSetClient)
+	// CloudZero replicasets produce high memory consumption when there are large number of replicSets e.g. 71,000
+	//c.ReplicaSet = new(replicaSetClient)
 	c.inited = true
 }
 
